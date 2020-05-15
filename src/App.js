@@ -1,25 +1,69 @@
-import React from 'react';
-import logo from './logo.svg';
+import React,{useState} from 'react';
+import axios from 'axios'
+import Search from './components/Search'
+import List from './components/List'
+import Popup from './components/Popup'
 import './App.css';
 
 function App() {
+
+  const apiurl='http://www.omdbapi.com/?apikey=66b44742'
+  const [ state,setState ]=useState({
+    s:'',
+    result:[],
+    selected:{}
+  })
+
+
+  const onChange=(e)=>{
+    let s = e.target.value;
+
+        setState(prevState => {
+          return { ...prevState, s: s }
+        });
+  }
+
+  const search=(e)=>{
+    if (e.key === "Enter"){
+      axios(apiurl + "&s=" + state.s).then(({data})=>{
+        let results = data.Search;
+        setState(prevState => {
+         return { ...prevState, result: results }
+       })
+      })
+    }
+  }
+
+  const openPopup = id => {
+      axios(apiurl + "&i=" + id).then(({ data }) => {
+        let result = data;
+
+
+
+        setState(prevState => {
+          return { ...prevState, selected: result }
+        });
+      });
+    }
+
+    const closePopup = () => {
+      setState(prevState => {
+        return { ...prevState, selected: {} }
+      });
+    }
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+   <header>
+     <h1>Movie Database</h1>
+   </header>
+   <main>
+        <Search onChange={onChange} search={search}/>
+        <List result={state.result} openPopup={openPopup}/>
+        {(typeof state.selected.Title != "undefined") ? <Popup selected={state.selected} closePopup={closePopup} /> : false}
+      </main>
+   </div>
   );
 }
 
